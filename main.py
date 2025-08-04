@@ -38,7 +38,7 @@ class ResumePDF(FPDF):
         self.set_font("Helvetica", '', 10)
         for point in points:
             self.set_x(18)
-            self.multi_cell(0, 5, f"• {point}")
+            self.multi_cell(0, 5, f"- {point}")
         self.ln(1)
 
 @app.get("/")
