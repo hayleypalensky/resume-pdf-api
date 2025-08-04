@@ -97,3 +97,7 @@ def generate_resume():
     return Response(content=pdf_output, media_type="application/pdf", headers={
         "Content-Disposition": "attachment; filename=hayley_palensky_resume.pdf"
     })
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
