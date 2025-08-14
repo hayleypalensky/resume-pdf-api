@@ -35,17 +35,25 @@ class ResumeData(BaseModel):
     education: List[Education]
     experience: List[Experience]
     skills: str
+    header_color: Optional[str] = "#000000"  # <-- new
 
 class ResumePDF(FPDF):
     def __init__(self, resume_data: ResumeData):
         super().__init__(format='Letter')
         self.resume_data = resume_data
 
+    def hex_to_rgb(self, hex_color):  # <-- new
+        hex_color = hex_color.lstrip('#')
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
     def header(self):
         self.set_font("Helvetica", 'B', 14)
         self.set_x(18)
+        r, g, b = self.hex_to_rgb(self.resume_data.header_color or "#000000")
+        self.set_text_color(r, g, b)
         self.cell(0, 10, self.resume_data.name or '', ln=True, align='L')
         self.set_font("Helvetica", '', 10)
+        self.set_text_color(0, 0, 0)  # reset to black
         self.set_x(18)
         contact_info = f"{self.resume_data.email or ''} | {self.resume_data.phone or ''} | {self.resume_data.website or ''}"
         self.cell(0, 6, contact_info, ln=True, align='L')
@@ -54,7 +62,10 @@ class ResumePDF(FPDF):
     def section_title(self, title):
         self.set_font("Helvetica", 'B', 12)
         self.set_x(18)
+        r, g, b = self.hex_to_rgb(self.resume_data.header_color or "#000000")
+        self.set_text_color(r, g, b)
         self.cell(0, 8, title or '', ln=True)
+        self.set_text_color(0, 0, 0)  # reset to black
         self.ln(1)
 
     def job_entry(self, job_title, company, location_dates):
@@ -174,7 +185,8 @@ default_resume_data = ResumeData(
             ]
         )
     ],
-    skills="Adobe Suite, Figma, Prototyping, Wireframing, HTML, CSS, User Research, Mobile Design, Web Design, Hubspot, Jira, Microsoft Office Suite, Google Suite"
+    skills="Adobe Suite, Figma, Prototyping, Wireframing, HTML, CSS, User Research, Mobile Design, Web Design, Hubspot, Jira, Microsoft Office Suite, Google Suite",
+    header_color="#000000"  # Default fallback if frontend doesn't send a value
 )
 
 if __name__ == "__main__":
