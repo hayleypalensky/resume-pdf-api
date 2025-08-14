@@ -165,6 +165,7 @@ def generate_resume():
 
 @app.post("/generate")
 def generate_custom_resume(resume_data: ResumeData):
+    print("Received resume data:", resume_data)
     pdf_output = create_resume_pdf(resume_data)
     filename = f"{resume_data.name.lower().replace(' ', '_')}_resume.pdf"
     return Response(content=pdf_output, media_type="application/pdf", headers={
