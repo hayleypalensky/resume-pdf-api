@@ -42,38 +42,38 @@ class ResumePDF(FPDF):
         self.resume_data = resume_data
 
     def header(self):
-        self.set_font("Helvetica", 'B', 14)
+        self.set_font("Arial", 'B', 14)
         self.set_x(18)
         self.cell(0, 10, self.resume_data.name, ln=True, align='L')
-        self.set_font("Helvetica", '', 10)
+        self.set_font("Arial", '', 10)
         self.set_x(18)
         contact_info = f"{self.resume_data.email} | {self.resume_data.phone} | {self.resume_data.website}"
         self.cell(0, 6, contact_info, ln=True, align='L')
         self.ln(4)
 
     def section_title(self, title):
-        self.set_font("Helvetica", 'B', 12)
+        self.set_font("Arial", 'B', 12)
         self.set_x(18)
         self.cell(0, 8, title, ln=True)
         self.ln(1)
 
     def job_entry(self, job_title, company, location_dates):
         self.set_x(18)
-        self.set_font("Helvetica", 'B', 10)
+        self.set_font("Arial", 'B', 10)
         self.cell(0, 5, f"{job_title} - {company}", ln=True)
         self.set_x(18)
-        self.set_font("Helvetica", '', 10)
+        self.set_font("Arial", '', 10)
         self.cell(0, 5, location_dates, ln=True)
         self.ln(1)
 
     def section_body(self, body):
-        self.set_font("Helvetica", '', 10)
+        self.set_font("Arial", '', 10)
         self.set_x(18)
         self.multi_cell(0, 5, body)
         self.ln(1)
 
     def bullet_points(self, points):
-        self.set_font("Helvetica", '', 10)
+        self.set_font("Arial", '', 10)
         for point in points:
             self.set_x(18)
             self.multi_cell(0, 5, f"- {point}")
