@@ -15,8 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app = FastAPI()
-
 class Education(BaseModel):
     degree: str
     school: str
