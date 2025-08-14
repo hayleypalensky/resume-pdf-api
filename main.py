@@ -42,38 +42,38 @@ class ResumePDF(FPDF):
         self.resume_data = resume_data
 
     def header(self):
-        self.set_font("Arial", 'B', 14)
+        self.set_font("Helvetica", 'B', 14)
         self.set_x(18)
         self.cell(0, 10, self.resume_data.name or '', ln=True, align='L')
-        self.set_font("Arial", '', 10)
+        self.set_font("Helvetica", '', 10)
         self.set_x(18)
         contact_info = f"{self.resume_data.email or ''} | {self.resume_data.phone or ''} | {self.resume_data.website or ''}"
         self.cell(0, 6, contact_info, ln=True, align='L')
         self.ln(4)
 
     def section_title(self, title):
-        self.set_font("Arial", 'B', 12)
+        self.set_font("Helvetica", 'B', 12)
         self.set_x(18)
         self.cell(0, 8, title or '', ln=True)
         self.ln(1)
 
     def job_entry(self, job_title, company, location_dates):
         self.set_x(18)
-        self.set_font("Arial", 'B', 10)
+        self.set_font("Helvetica", 'B', 10)
         self.cell(0, 5, f"{job_title or ''} - {company or ''}", ln=True)
         self.set_x(18)
-        self.set_font("Arial", '', 10)
+        self.set_font("Helvetica", '', 10)
         self.cell(0, 5, location_dates or '', ln=True)
         self.ln(1)
 
     def section_body(self, body):
-        self.set_font("Arial", '', 10)
+        self.set_font("Helvetica", '', 10)
         self.set_x(18)
         self.multi_cell(0, 5, body or '')
         self.ln(1)
 
     def bullet_points(self, points):
-        self.set_font("Arial", '', 10)
+        self.set_font("Helvetica", '', 10)
         for point in points or []:
             if point:
                 self.set_x(18)
@@ -86,29 +86,33 @@ def create_resume_pdf(resume_data: ResumeData):
     pdf.set_margins(18, 10, 18)
     pdf.add_page()
 
-    # Summary
-    pdf.section_title("PROFESSIONAL SUMMARY")
-    pdf.section_body(resume_data.summary)
+    try:
+        print("⚙️ Adding summary...")
+        pdf.section_title("PROFESSIONAL SUMMARY")
+        pdf.section_body(resume_data.summary or '')
 
-    # Education
-    pdf.section_title("EDUCATION")
-    for edu in resume_data.education or []:
-        pdf.job_entry(edu.degree, edu.school, edu.location_dates)
+        print("📚 Adding education...")
+        pdf.section_title("EDUCATION")
+        for edu in resume_data.education or []:
+            pdf.job_entry(edu.degree or '', edu.school or '', edu.location_dates or '')
 
-    # Experience
-    pdf.section_title("EXPERIENCE")
-    for i, exp in enumerate(resume_data.experience or []):
-        pdf.job_entry(exp.job_title, exp.company, exp.location_dates)
-        pdf.bullet_points(exp.bullet_points)
-        if i < len(resume_data.experience) - 1:
-            pdf.ln(3)
+        print("💼 Adding experience...")
+        pdf.section_title("EXPERIENCE")
+        for i, exp in enumerate(resume_data.experience or []):
+            pdf.job_entry(exp.job_title or '', exp.company or '', exp.location_dates or '')
+            pdf.bullet_points(exp.bullet_points or [])
+            if i < len(resume_data.experience) - 1:
+                pdf.ln(3)
 
-    # Skills
-    pdf.section_title("SKILLS")
-    pdf.section_body(resume_data.skills)
+        print("🧠 Adding skills...")
+        pdf.section_title("SKILLS")
+        pdf.section_body(resume_data.skills or '')
 
-    pdf_output = pdf.output(dest='S').encode('latin1')
-    return pdf_output
+    except Exception as e:
+        print("❌ Error while building PDF:", e)
+
+    print("✅ PDF created.")
+    return pdf.output(dest='S').encode('latin1')
 
 @app.get("/")
 def generate_resume():
@@ -176,4 +180,3 @@ default_resume_data = ResumeData(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)
-
