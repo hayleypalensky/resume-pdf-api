@@ -44,40 +44,87 @@ class ResumePDF(FPDF):
     def header(self):
         self.set_font("Arial", 'B', 14)
         self.set_x(18)
-        self.cell(0, 10, self.resume_data.name, ln=True, align='L')
+        self.cell(0, 10, self.resume_data.name or '', ln=True, align='L')
         self.set_font("Arial", '', 10)
         self.set_x(18)
-        contact_info = f"{self.resume_data.email} | {self.resume_data.phone} | {self.resume_data.website}"
+        contact_info = f"{self.resume_data.email or ''} | {self.resume_data.phone or ''} | {self.resume_data.website or ''}"
         self.cell(0, 6, contact_info, ln=True, align='L')
         self.ln(4)
 
     def section_title(self, title):
         self.set_font("Arial", 'B', 12)
         self.set_x(18)
-        self.cell(0, 8, title, ln=True)
+        self.cell(0, 8, title or '', ln=True)
         self.ln(1)
 
     def job_entry(self, job_title, company, location_dates):
         self.set_x(18)
         self.set_font("Arial", 'B', 10)
-        self.cell(0, 5, f"{job_title} - {company}", ln=True)
+        self.cell(0, 5, f"{job_title or ''} - {company or ''}", ln=True)
         self.set_x(18)
         self.set_font("Arial", '', 10)
-        self.cell(0, 5, location_dates, ln=True)
+        self.cell(0, 5, location_dates or '', ln=True)
         self.ln(1)
 
     def section_body(self, body):
         self.set_font("Arial", '', 10)
         self.set_x(18)
-        self.multi_cell(0, 5, body)
+        self.multi_cell(0, 5, body or '')
         self.ln(1)
 
     def bullet_points(self, points):
         self.set_font("Arial", '', 10)
-        for point in points:
-            self.set_x(18)
-            self.multi_cell(0, 5, f"- {point}")
+        for point in points or []:
+            if point:
+                self.set_x(18)
+                self.multi_cell(0, 5, f"- {point}")
         self.ln(1)
+
+def create_resume_pdf(resume_data: ResumeData):
+    pdf = ResumePDF(resume_data)
+    pdf.set_auto_page_break(auto=True, margin=10)
+    pdf.set_margins(18, 10, 18)
+    pdf.add_page()
+
+    # Summary
+    pdf.section_title("PROFESSIONAL SUMMARY")
+    pdf.section_body(resume_data.summary)
+
+    # Education
+    pdf.section_title("EDUCATION")
+    for edu in resume_data.education or []:
+        pdf.job_entry(edu.degree, edu.school, edu.location_dates)
+
+    # Experience
+    pdf.section_title("EXPERIENCE")
+    for i, exp in enumerate(resume_data.experience or []):
+        pdf.job_entry(exp.job_title, exp.company, exp.location_dates)
+        pdf.bullet_points(exp.bullet_points)
+        if i < len(resume_data.experience) - 1:
+            pdf.ln(3)
+
+    # Skills
+    pdf.section_title("SKILLS")
+    pdf.section_body(resume_data.skills)
+
+    pdf_output = pdf.output(dest='S').encode('latin1')
+    return pdf_output
+
+@app.get("/")
+def generate_resume():
+    pdf_output = create_resume_pdf(default_resume_data)
+    return Response(content=pdf_output, media_type="application/pdf", headers={
+        "Content-Disposition": "attachment; filename=hayley_palensky_resume.pdf"
+    })
+
+@app.post("/generate")
+def generate_custom_resume(resume_data: ResumeData):
+    print("Received resume data:", resume_data)
+    pdf_output = create_resume_pdf(resume_data)
+    filename = f"{(resume_data.name or 'resume').lower().replace(' ', '_')}_resume.pdf"
+    return Response(content=pdf_output, media_type="application/pdf", headers={
+        "Content-Disposition": f"attachment; filename={filename}"
+    })
 
 # Default resume data for GET request
 default_resume_data = ResumeData(
@@ -126,52 +173,7 @@ default_resume_data = ResumeData(
     skills="Adobe Suite, Figma, Prototyping, Wireframing, HTML, CSS, User Research, Mobile Design, Web Design, Hubspot, Jira, Microsoft Office Suite, Google Suite"
 )
 
-def create_resume_pdf(resume_data: ResumeData):
-    pdf = ResumePDF(resume_data)
-    pdf.set_auto_page_break(auto=True, margin=10)
-    pdf.set_margins(18, 10, 18)
-    pdf.add_page()
-
-    # Summary
-    pdf.section_title("PROFESSIONAL SUMMARY")
-    pdf.section_body(resume_data.summary)
-
-    # Education
-    pdf.section_title("EDUCATION")
-    for edu in resume_data.education:
-        pdf.job_entry(edu.degree, edu.school, edu.location_dates)
-
-    # Experience
-    pdf.section_title("EXPERIENCE")
-    for i, exp in enumerate(resume_data.experience):
-        pdf.job_entry(exp.job_title, exp.company, exp.location_dates)
-        pdf.bullet_points(exp.bullet_points)
-        if i < len(resume_data.experience) - 1:  # Don't add extra space after last job
-            pdf.ln(3)
-
-    # Skills
-    pdf.section_title("SKILLS")
-    pdf.section_body(resume_data.skills)
-
-    pdf_output = pdf.output(dest='S').encode('latin1')
-    return pdf_output
-
-@app.get("/")
-def generate_resume():
-    pdf_output = create_resume_pdf(default_resume_data)
-    return Response(content=pdf_output, media_type="application/pdf", headers={
-        "Content-Disposition": "attachment; filename=hayley_palensky_resume.pdf"
-    })
-
-@app.post("/generate")
-def generate_custom_resume(resume_data: ResumeData):
-    print("Received resume data:", resume_data)
-    pdf_output = create_resume_pdf(resume_data)
-    filename = f"{resume_data.name.lower().replace(' ', '_')}_resume.pdf"
-    return Response(content=pdf_output, media_type="application/pdf", headers={
-        "Content-Disposition": f"attachment; filename={filename}"
-    })
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)
+
